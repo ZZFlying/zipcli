@@ -1,0 +1,24 @@
+name: Native Image Build
+
+on: [ push ]
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - uses: actions/checkout@v4
+      - uses: graalvm/setup-graalvm@v1
+        with:
+          java-version: '17.0.12'
+          distribution: 'graalvm'
+          cache: maven
+
+      - name: Build native image
+        run: |
+          mvn -Dfile.encoding=UTF-8 package
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: zipFolder
+          path: target
