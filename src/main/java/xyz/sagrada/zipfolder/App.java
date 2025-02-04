@@ -28,7 +28,8 @@ public class App implements Runnable {
     @Option(names = {"-t", "--only-test"}, defaultValue = "false")
     private Boolean onlyTest;
 
-    @Option(names = {"-e", "--exclude"}, defaultValue = ".stfolder", description = "Exclude folder name")
+    @Option(names = {"-e", "--exclude"}, defaultValue = ".stfolder,.nomedia", split = ",",
+        description = "Exclude folder name")
     private List<String> excludes;
 
     public static void main(String[] args) {
