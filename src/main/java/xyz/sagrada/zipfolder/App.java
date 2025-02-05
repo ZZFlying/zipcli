@@ -8,6 +8,8 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
@@ -65,12 +67,16 @@ public class App implements Runnable {
 
     private void zipFolder(File file) {
         System.out.println(file.getName());
+        Path zipFilePath = Path.of(targetDir, file.getName() + ".zip");
+        List<File> newFileList = Optional.ofNullable(file.listFiles()).stream().flatMap(Stream::of).toList();
+        if (newFileList.stream().noneMatch(e -> ".ehviewer".equals(e.getName()))) {
+            System.out.println(file.getName() + " not exists .ehviewer file");
+            return;
+        }
         if (onlyTest) {
             return;
         }
-        Path zipFilePath = Path.of(targetDir, file.getName() + ".zip");
         try (ZipOutputStream outputStream = new ZipOutputStream(Files.newOutputStream(zipFilePath))) {
-            List<File> newFileList = Files.list(file.toPath()).map(Path::toFile).toList();
             for (File newFile : newFileList) {
                 ZipEntry zipFile = new ZipEntry(newFile.getName());
                 outputStream.putNextEntry(zipFile);
