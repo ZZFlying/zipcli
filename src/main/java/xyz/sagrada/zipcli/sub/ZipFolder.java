@@ -18,6 +18,7 @@ import java.util.zip.ZipOutputStream;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
+import xyz.sagrada.zipcli.App;
 
 @Command(name = "folder", mixinStandardHelpOptions = true, version = "1.0", description = "Zip folder one By one",
     subcommands = {CheckZipFile.class})
@@ -71,21 +72,25 @@ public class ZipFolder implements Callable<Integer> {
                         newFileMap.put(gid, file);
                     }
                 });
-            newFileMap.values().parallelStream().forEach(this::zipFolder);
+            int total = newFileMap.size();
+            AtomicInteger current = new AtomicInteger(0);
+            newFileMap.values().parallelStream().forEach(file -> {
+                this.zipFolder(file);
+                App.processing("Zipping ", current, total);
+            });
         }
         catch (Exception e) {
-            System.err.println("zipping error: " + e.getMessage());
+            App.error("zipping error: " + e.getMessage());
         }
         return 0;
     }
 
     private void zipFolder(File file) {
-        System.out.println(file.getName());
         Path zipFilePath = Path.of(targetDir, file.getName() + ".zip");
         List<File> fileList = Optional.ofNullable(file.listFiles()).stream().flatMap(Stream::of).toList();
         File ehviewer = fileList.stream().filter(e -> ".ehviewer".equals(e.getName())).findFirst().orElse(null);
         if (ehviewer == null) {
-            System.out.println(file.getName() + " not exists .ehviewer file");
+            App.info(file.getName() + " not exists .ehviewer file");
             return;
         }
 
@@ -99,7 +104,7 @@ public class ZipFolder implements Callable<Integer> {
                     .ifPresent(e -> imageCount.incrementAndGet());
             }
             if (imagePages != imageCount.get()) {
-                System.out.println(file.getName() + " image count not match .ehviewer");
+                App.info(file.getName() + " image count not match .ehviewer");
                 return;
             }
         }
@@ -107,6 +112,7 @@ public class ZipFolder implements Callable<Integer> {
             throw new RuntimeException(e);
         }
 
+        App.info(file.getName());
         if (onlyTest) {
             return;
         }

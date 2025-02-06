@@ -14,6 +14,7 @@ import java.util.zip.ZipFile;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
+import xyz.sagrada.zipcli.App;
 
 @Command(name = "check", mixinStandardHelpOptions = true, version = "1.0", description = "Test zip file valid")
 public class CheckZipFile implements Callable<Integer> {
@@ -45,16 +46,23 @@ public class CheckZipFile implements Callable<Integer> {
     public Integer call() {
         Path sourcePath = Path.of(sourceDir);
         try {
-            Files.list(sourcePath).map(Path::toFile).filter(e -> !excludes.contains(e.getName())).parallel()
-                .forEach(this::checkValid);
+            List<File> zipFileList = Files.list(sourcePath).map(Path::toFile)
+                .filter(e -> !excludes.contains(e.getName())).toList();
+            int total = zipFileList.size();
+            AtomicInteger current = new AtomicInteger(0);
+            zipFileList.parallelStream()
+                .forEach(file -> {
+                    this.checkValid(file);
+                    App.processing("CheckZipFile ", current, total);
+                });
         }
         catch (Exception e) {
-            System.err.println("test zip file error: " + e.getMessage());
+            App.error("test zip file error: " + e.getMessage());
         }
         return 0;
     }
 
-    public boolean checkValid(File file) {
+    public void checkValid(File file) {
         String gid = file.getName().split("-")[0];
         try (ZipFile zipFile = new ZipFile(file)) {
             List<? extends ZipEntry> zipEntryList = zipFile.stream().toList();
@@ -71,23 +79,23 @@ public class CheckZipFile implements Callable<Integer> {
                 inputStream.close();
             }
             if (onlyTest) {
-                return true;
+                App.info(gid + " OK");
+                return;
             }
             if (lines == null) {
-                System.err.println(gid + " .ehviewer not exist");
-                return false;
+                App.error(gid + " .ehviewer not exist");
+                return;
             }
             if (lines.length != (8 + pageCount.get())) {
-                System.err.println(gid + " .ehviewer not valid");
-                return false;
+                App.error(gid + " .ehviewer not valid");
+                return;
             }
         }
         catch (IOException e) {
-            System.err.println(gid + " check error: " + e.getMessage());
-            return false;
+            App.error(gid + " check error: " + e.getMessage());
+            return;
         }
-        System.out.println(gid + " OK");
-        return true;
+        App.info(gid + " OK");
     }
 
 }
