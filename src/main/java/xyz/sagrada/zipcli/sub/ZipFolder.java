@@ -1,4 +1,4 @@
-package xyz.sagrada.zipfolder;
+package xyz.sagrada.zipcli.sub;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -9,18 +9,19 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import picocli.CommandLine;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
-@Command(name = "zipFolder", mixinStandardHelpOptions = true, version = "1.0", description = "Zip folder one By one")
-public class App implements Runnable {
+@Command(name = "folder", mixinStandardHelpOptions = true, version = "1.0", description = "Zip folder one By one",
+    subcommands = {CheckZipFile.class})
+public class ZipFolder implements Callable<Integer> {
 
     @Parameters(index = "0", description = "Source folder dir")
     private String sourceDir;
@@ -39,13 +40,20 @@ public class App implements Runnable {
         description = "Images suffixes")
     private List<String> suffixes;
 
-    public static void main(String[] args) {
-        int exitCode = new CommandLine(new App()).execute(args);
-        System.exit(exitCode);
+    public ZipFolder() {
+    }
+
+    public ZipFolder(String sourceDir, String targetDir, Boolean onlyTest, List<String> excludes,
+        List<String> suffixes) {
+        this.sourceDir = sourceDir;
+        this.targetDir = targetDir;
+        this.onlyTest = onlyTest;
+        this.excludes = excludes;
+        this.suffixes = suffixes;
     }
 
     @Override
-    public void run() {
+    public Integer call() {
         Path sourcePath = Path.of(sourceDir);
         Path targetPath = Path.of(targetDir);
         Map<String, File> zipMap = new HashMap<>();
@@ -65,9 +73,10 @@ public class App implements Runnable {
                 });
             newFileMap.values().parallelStream().forEach(this::zipFolder);
         }
-        catch (IOException e) {
-            throw new RuntimeException(e);
+        catch (Exception e) {
+            System.err.println("zipping error: " + e.getMessage());
         }
+        return 0;
     }
 
     private void zipFolder(File file) {
