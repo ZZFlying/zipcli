@@ -34,8 +34,8 @@ public class App implements Callable<Integer> {
         System.exit(exitCode);
     }
 
-    public synchronized static void log(String message, boolean isError) {
-        if (isError || (!quite && !moreQuite)) {
+    public synchronized static void log(String message, boolean error) {
+        if (error || (!quite && !moreQuite)) {
             System.out.print(ERASE_ROW);
             System.out.println(message);
         }
@@ -54,7 +54,7 @@ public class App implements Callable<Integer> {
     }
 
     public static void processing(String message, int total) {
-        processing = message + " processing: %d/" + total;
+        processing = "\r" + message + " processing: %d/" + total;
     }
 
     public static void processing() {
