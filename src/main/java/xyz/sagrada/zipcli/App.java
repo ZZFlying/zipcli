@@ -1,11 +1,11 @@
 package xyz.sagrada.zipcli;
 
-import java.io.PrintStream;
 import java.util.concurrent.Callable;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import picocli.CommandLine;
 import picocli.CommandLine.Command;
+import picocli.CommandLine.Option;
 import xyz.sagrada.zipcli.sub.CheckZipFile;
 import xyz.sagrada.zipcli.sub.ZipFolder;
 
@@ -13,28 +13,45 @@ import xyz.sagrada.zipcli.sub.ZipFolder;
     subcommands = {ZipFolder.class, CheckZipFile.class})
 public class App implements Callable<Integer> {
 
-    private static final String ERASE_ROW = "\033[2K\r";
+    public static final String ERASE_ROW = "\033[2K\r";
+
+    public static final String RED_FONT = "\033[31m";
+
+    public static final String RESET = "\033[0m";
+
+    @Option(names = {"-q", "--quite"}, defaultValue = "false", description = "Only print error message and processing")
+    private static Boolean quite;
+
+    @Option(names = {"-qq", "--more-quite"}, defaultValue = "false", description = "Only print error message")
+    private static Boolean moreQuite;
 
     public static void main(String[] args) {
         int exitCode = new CommandLine(new App()).execute(args);
         System.exit(exitCode);
     }
 
-    public synchronized static void log(PrintStream stream, String message) {
-        stream.print(ERASE_ROW);
-        stream.print(message);
+    public synchronized static void log(String message) {
+        System.out.print(ERASE_ROW);
+        System.out.print(message);
+        System.out.flush();
     }
 
     public static void error(String message) {
-        log(System.err, message + "\n");
+        log(RED_FONT + message + "\n" + RESET);
     }
 
     public static void info(String message) {
-        log(System.out, message + "\n");
+        if (quite || moreQuite) {
+            return;
+        }
+        log(message + "\n");
     }
 
     public synchronized static void processing(String message, AtomicInteger current, int total) {
-        log(System.out, message + " processing: " + current.incrementAndGet() + "/" + total);
+        if (moreQuite) {
+            return;
+        }
+        log(message + " processing: " + current.incrementAndGet() + "/" + total);
     }
 
     @Override
