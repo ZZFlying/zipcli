@@ -73,10 +73,10 @@ public class ZipFolder implements Callable<Integer> {
                     }
                 });
             int total = newFileMap.size();
-            AtomicInteger current = new AtomicInteger(0);
+            App.processing("Zipping ", total);
             newFileMap.values().parallelStream().forEach(file -> {
+                App.processing();
                 this.zipFolder(file);
-                App.processing("Zipping ", current, total);
             });
         }
         catch (Exception e) {

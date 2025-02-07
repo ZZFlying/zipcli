@@ -19,6 +19,10 @@ public class App implements Callable<Integer> {
 
     public static final String RESET = "\033[0m";
 
+    private static final AtomicInteger current = new AtomicInteger(0);
+
+    private static String processing;
+
     @Option(names = {"-q", "--quite"}, defaultValue = "false", description = "Only print error message and processing")
     private static Boolean quite;
 
@@ -32,26 +36,30 @@ public class App implements Callable<Integer> {
 
     public synchronized static void log(String message) {
         System.out.print(ERASE_ROW);
-        System.out.print(message);
+        System.out.println(message);
+        if (!moreQuite) {
+            System.out.printf(processing, current.get());
+        }
         System.out.flush();
     }
 
     public static void error(String message) {
-        log(RED_FONT + message + "\n" + RESET);
+        log(RED_FONT + message + RESET);
     }
 
     public static void info(String message) {
         if (quite || moreQuite) {
             return;
         }
-        log(message + "\n");
+        log(message);
     }
 
-    public synchronized static void processing(String message, AtomicInteger current, int total) {
-        if (moreQuite) {
-            return;
-        }
-        log(message + " processing: " + current.incrementAndGet() + "/" + total);
+    public static void processing(String message, int total) {
+        processing = message + " processing: %d/" + total;
+    }
+
+    public static void processing() {
+        current.incrementAndGet();
     }
 
     @Override

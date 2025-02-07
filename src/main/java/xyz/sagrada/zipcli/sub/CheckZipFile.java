@@ -49,11 +49,11 @@ public class CheckZipFile implements Callable<Integer> {
             List<File> zipFileList = Files.list(sourcePath).map(Path::toFile)
                 .filter(e -> !excludes.contains(e.getName())).toList();
             int total = zipFileList.size();
-            AtomicInteger current = new AtomicInteger(0);
+            App.processing("CheckZipFile ", total);
             zipFileList.parallelStream()
                 .forEach(file -> {
+                    App.processing();
                     this.checkValid(file);
-                    App.processing("CheckZipFile ", current, total);
                 });
         }
         catch (Exception e) {
