@@ -34,9 +34,11 @@ public class App implements Callable<Integer> {
         System.exit(exitCode);
     }
 
-    public synchronized static void log(String message) {
-        System.out.print(ERASE_ROW);
-        System.out.println(message);
+    public synchronized static void log(String message, boolean isError) {
+        if (isError || (!quite && !moreQuite)) {
+            System.out.print(ERASE_ROW);
+            System.out.println(message);
+        }
         if (!moreQuite) {
             System.out.printf(processing, current.get());
         }
@@ -44,14 +46,11 @@ public class App implements Callable<Integer> {
     }
 
     public static void error(String message) {
-        log(RED_FONT + message + RESET);
+        log(RED_FONT + message + RESET, true);
     }
 
     public static void info(String message) {
-        if (quite || moreQuite) {
-            return;
-        }
-        log(message);
+        log(message, false);
     }
 
     public static void processing(String message, int total) {
