@@ -90,7 +90,7 @@ public class ZipFolder implements Callable<Integer> {
         List<File> fileList = Optional.ofNullable(file.listFiles()).stream().flatMap(Stream::of).toList();
         File ehviewer = fileList.stream().filter(e -> ".ehviewer".equals(e.getName())).findFirst().orElse(null);
         if (ehviewer == null) {
-            App.info(file.getName() + " not exists .ehviewer file");
+            App.error(file.getName() + " not exists .ehviewer file");
             return;
         }
 
@@ -104,7 +104,7 @@ public class ZipFolder implements Callable<Integer> {
                     .ifPresent(e -> imageCount.incrementAndGet());
             }
             if (imagePages != imageCount.get()) {
-                App.info(file.getName() + " image count not match .ehviewer");
+                App.error(file.getName() + " image count not match .ehviewer");
                 return;
             }
         }
