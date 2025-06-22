@@ -60,12 +60,12 @@ public class ZipFolder implements Callable<Integer> {
         Map<String, File> zipMap = new HashMap<>();
         Map<String, File> newFileMap = new HashMap<>();
         try {
-            Files.list(targetPath).map(Path::toFile).filter(e -> !excludes.contains(e.getName()))
+            Files.list(targetPath).map(Path::toFile).filter(e -> excludes.stream().noneMatch(i -> e.getName().startsWith(i)))
                 .forEach(file -> {
                     String gid = file.getName().split("-", 2)[0];
                     zipMap.put(gid, file);
                 });
-            Files.list(sourcePath).map(Path::toFile).filter(e -> !excludes.contains(e.getName()))
+            Files.list(sourcePath).map(Path::toFile).filter(e -> excludes.stream().noneMatch(i -> e.getName().startsWith(i)))
                 .forEach(file -> {
                     String gid = file.getName().split("-", 2)[0];
                     if (!zipMap.containsKey(gid)) {
